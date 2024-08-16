@@ -1,4 +1,5 @@
 const Blog = require('../models/blog');
+const { v4: uuidv4 } = require('uuid');
 
 // Create a new blog
 exports.createBlog = async (req, res) => {
