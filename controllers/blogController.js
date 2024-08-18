@@ -3,15 +3,13 @@ const { v4: uuidv4 } = require('uuid');
 
 // Create a new blog
 exports.createBlog = async (req, res) => {
+  const { title, description } = req.body;
   try {
-    const blog = new Blog({
-        ...req.body,
-        id: uuidv4() 
-      });
-    await blog.save();
-    res.status(201).json(blog);
+      const blog = new Blog({id:uuidv4(), title, description, authorId: req.user.userId });
+      await blog.save();
+      res.status(201).json(blog);
   } catch (error) {
-    res.status(400).json({ error: error.message });
+      res.status(500).json({ message: 'Error creating blog', error });
   }
 };
 
@@ -71,5 +69,40 @@ exports.addReply = async (req, res) => {
     res.status(200).json(blog);
   } catch (error) {
     res.status(400).json({ error: error.message });
+  }
+};
+
+//get blog by user
+
+exports.getBlogsByUser = async (req, res) => {
+  try {
+      const blogs = await Blog.find({ authorId: req.user.userId });
+      res.json(blogs);
+  } catch (error) {
+      res.status(500).json({ message: 'Error fetching blogs', error });
+  }
+};
+
+//update a blog
+exports.updateBlog = async (req, res) => {
+  const { blogId } = req.params;
+  try {
+      const blog = await Blog.findOneAndUpdate({ _id: blogId, authorId: req.user.userId }, req.body, { new: true });
+      if (!blog) return res.status(404).json({ message: 'Blog not found' });
+      res.json(blog);
+  } catch (error) {
+      res.status(500).json({ message: 'Error updating blog', error });
+  }
+};
+
+// delete a blog
+exports.deleteBlog = async (req, res) => {
+  const { blogId } = req.params;
+  try {
+      const blog = await Blog.findOneAndDelete({ _id: blogId, authorId: req.user.userId });
+      if (!blog) return res.status(404).json({ message: 'Blog not found' });
+      res.json({ message: 'Blog deleted' });
+  } catch (error) {
+      res.status(500).json({ message: 'Error deleting blog', error });
   }
 };
